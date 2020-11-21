@@ -20,9 +20,9 @@ queue-name1.meta: 파일의 읽는 위치와 써야하는 파일 정보를 기�
 
 (파일이름 인덱스가 0에서 1로 증가할 경우: 00000000000000000000.queue -> 00000000000000000001.queue)
 
-메타 파일은 24바이트로 이루어져 있으면 **읽는 파일이름 인덱스(8바이트) + 읽는 파일의 읽어야할 위치(8바이트) + 이어서 써야 하는 파일이름 인덱스(8바이트))**
+메타 파일은 24바이트로 이루어져 있으면 **읽는 파일이름 인덱스(8바이트) + 읽는 파일의 읽어야할 위치(8바이트) + 쓰는 파일이름 인덱스(8바이트))**
 
-### Config
+## Config
 ```c#
 QueueConfig config = new QueueConfig()
 {
@@ -34,15 +34,41 @@ QueueConfig config = new QueueConfig()
 };
 ```
 
-### 사용하기
+## 사용하기
 ```c#
 IFileQueue<string> fq = FileQueue<string>.Create(config);
 fq.Enqueue(data);
 object data = fq.Dequeue();
 ```
 
-### DataConverter
+## DataConverter
+`IDataConverter`를 구현하여 config 로 전달하면 된다.
+```c#
+namespace Knero.FileQueue.Converter
+{
+    public interface IDataConverter
+    {
+        byte[] Serialize(object o);
 
-### DataBlockParseException 발생
+        object Deserialize(byte[] data);
+    }
+}
+```
+**Serialize**: Enqueue 를 호출하면 데이터를 파일로 쓰기 전에 실행되며 object 를 byte[] 로 변환해 준다.
+**Deserialize**: Dequeue 를 호출하면 파일의 데이터를 읽어서 byte[] 를 object 로 변환해 준다.
 
-### DequeueTimeoutException 발생
+### 기본적으로 제공되는 Converter
+- ObjectSerializer: BinaryFormatter 를 사용하여 변환을 수행한다.
+- Utf8Serializer: string 을 Encoding.UTF8 를 사용하여 변환을 수행한다.
+
+## DataBlockParseException 발생
+Deserialize 를 수행하는 중 데이터를 파싱하는 과정에서 발생하며 에러가 난 데이터는 `error` 디렉터리 밑으로 단일 파일로 저장된다.
+
+## DequeueTimeoutException 발생
+Dequeue 를 호출 후 config 의 DequeueTimeoutMilliseconds가 설정되어 있을 경우 발생하며
+발생하는 이유는 Enqueue 가 되지 않아서 데이터가 없거나 장애로 인해 데이터의 일부만을 읽은 경우이다.
+발생한 DequeueTimeoutException 의 `IsBroken` 를 사용하면 일부만 읽어진 상태인지 여부를 확인할 수 있고
+`QueueData` 를 통해서 현재 읽어진 데이터를 가져올 수 있다.
+
+### DequeueTimeoutException 대처하기
+만약 Enqueue 가 없어서 발생했다면 재시도하면 됨으로 간단하지만 일부만 읽었을 경우에는 아래와 같이 대처하는 것이 좋다.
