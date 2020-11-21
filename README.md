@@ -55,6 +55,7 @@ namespace Knero.FileQueue.Converter
 }
 ```
 **Serialize**: Enqueue 를 호출하면 데이터를 파일로 쓰기 전에 실행되며 object 를 byte[] 로 변환해 준다.
+
 **Deserialize**: Dequeue 를 호출하면 파일의 데이터를 읽어서 byte[] 를 object 로 변환해 준다.
 
 ### 기본적으로 제공되는 Converter
