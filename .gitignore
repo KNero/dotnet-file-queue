@@ -30,3 +30,9 @@
 *.exe
 *.out
 *.app
+
+Knero.FileQueue/bin
+Knero.FileQueue/obj
+Knero.FileQueue.Test/bin
+Knero.FileQueue.Test/obj
+Knero.FileQueue/.vs
