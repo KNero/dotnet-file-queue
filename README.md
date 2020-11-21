@@ -38,7 +38,7 @@ QueueConfig config = new QueueConfig()
 ```c#
 IFileQueue<string> fq = FileQueue<string>.Create(config);
 fq.Enqueue(data);
-object data = fq.Dequeue();
+string data = fq.Dequeue();
 ```
 
 ## DataConverter
