@@ -72,3 +72,22 @@ Dequeue 를 호출 후 config 의 DequeueTimeoutMilliseconds가 설정되어 있
 
 ### DequeueTimeoutException 대처하기
 만약 Enqueue 가 없어서 발생했다면 재시도하면 됨으로 간단하지만 일부만 읽었을 경우에는 아래와 같이 대처하는 것이 좋다.
+```c#
+try
+{
+    string result = fq.Dequeue();
+}
+catch (DequeueTimeoutException e)
+{
+    byte[] remain = fq.DequeueRawData(); // 장애로 읽지 못한 데이터를 DequeueRawData로 변환하지 않은 byte[]로 가져온다.
+
+    byte[] whole = new byte[e.QueueData.Length + remain.Length]; // Exception 에 담겨있는 이미 읽은 데이터와 함께 전체 byte[] 를생성한다.
+    using (MemoryStream wholeStream = new MemoryStream(whole))
+    {
+        wholeStream.Write(e.QueueData, 0, e.QueueData.Length); // 예외로 전달된 장애 전 읽은 데이터를 쓰고
+        wholeStream.Write(remain, 0, remain.Length); // 예외발 생 후 시도해서 가져온 남은 데이터를 이어서 써준다.
+    }
+
+    string result = fq.DeserializeQueueData(whole); // 전체데이터를 config 에서 설정한 DataConverter를 통해 객체로 변환한다.
+}
+```
