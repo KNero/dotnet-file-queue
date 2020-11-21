@@ -72,7 +72,7 @@ Dequeue 를 호출 후 config 의 DequeueTimeoutMilliseconds가 설정되어 있
 `QueueData` 를 통해서 현재 읽어진 데이터를 가져올 수 있다.
 
 ### DequeueTimeoutException 대처하기
-만약 Enqueue 가 없어서 발생했다면 재시도하면 됨으로 간단하지만 일부만 읽었을 경우에는 아래와 같이 대처하는 것이 좋다.
+만약 Enqueue 가 없어서 발생했다면 재시도하면 됨으로 간단하지만 일부만 읽었을 경우에는 아래를 참고하여 개발하면 된다.
 ```c#
 try
 {
