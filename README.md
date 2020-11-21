@@ -58,8 +58,8 @@ namespace Knero.FileQueue.Converter
 **Deserialize**: Dequeue 를 호출하면 파일의 데이터를 읽어서 byte[] 를 object 로 변환해 준다.
 
 ### 기본적으로 제공되는 Converter
-- ObjectSerializer: BinaryFormatter 를 사용하여 변환을 수행한다.
-- Utf8Serializer: string 을 Encoding.UTF8 를 사용하여 변환을 수행한다.
+- ObjectConverter: BinaryFormatter 를 사용하여 변환을 수행한다.
+- Utf8Converter: string 을 Encoding.UTF8 를 사용하여 변환을 수행한다.
 
 ## DataBlockParseException 발생
 Deserialize 를 수행하는 중 데이터를 파싱하는 과정에서 발생하며 에러가 난 데이터는 `error` 디렉터리 밑으로 단일 파일로 저장된다.
