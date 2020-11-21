@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace Knero.FileQueue.Converter
+﻿namespace Knero.FileQueue.Converter
 {
     public interface IDataConverter
     {

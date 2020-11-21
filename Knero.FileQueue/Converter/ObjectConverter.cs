@@ -1,10 +1,9 @@
-﻿using System;
-using System.IO;
+﻿using System.IO;
 using System.Runtime.Serialization.Formatters.Binary;
 
 namespace Knero.FileQueue.Converter
 {
-    public class ObjectSerializer : IDataConverter
+    public class ObjectConverter : IDataConverter
     {
         private readonly BinaryFormatter binaryFormatter = new BinaryFormatter();
 

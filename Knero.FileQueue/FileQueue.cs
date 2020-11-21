@@ -47,9 +47,30 @@ namespace Knero.FileQueue
             return new FileQueue<T>(config);
         }
 
-        public T Dequeue()
+        public T Dequeue() => DeserializeQueueData(DequeueRawData());
+
+        public void Enqueue(T t)
         {
-            byte[] data;
+            byte[] data = dataConverter.Serialize(t);
+
+            try
+            {
+                DataBlock dataBlock = DataBlock.CreateByUserData(data);
+
+                lock (enqueueLock)
+                {
+                    fileManager.WriteQueueData(dataBlock.QueueData);
+                }
+            }
+            catch (Exception e)
+            {
+                fileManager.WriteErrorQueueData(data, false);
+                throw e;
+            }
+        }
+
+        public byte[] DequeueRawData()
+        {
             bool isFindFooter = false;
 
             lock (dequeueLock)
@@ -74,38 +95,21 @@ namespace Knero.FileQueue
                         }
                     }
 
-                    data = bufStream.ToArray();
+                    return bufStream.ToArray();
                 }
             }
+        }
 
+        public T DeserializeQueueData(byte[] queueData)
+        {
             try
             {
-                DataBlock dataBlock = DataBlock.CreateByQueueData(data);
+                DataBlock dataBlock = DataBlock.CreateByQueueData(queueData);
                 return (T)dataConverter.Deserialize(dataBlock.UserData);
             }
             catch (DataBlock.DataBlockParseException e)
             {
                 fileManager.WriteErrorQueueData(e.QueueData, true);
-                throw e;
-            }
-        }
-
-        public void Enqueue(T t)
-        {
-            byte[] data = dataConverter.Serialize(t);
-
-            try
-            {
-                DataBlock dataBlock = DataBlock.CreateByUserData(data);
-
-                lock (enqueueLock)
-                {
-                    fileManager.WriteQueueData(dataBlock.QueueData);
-                }
-            }
-            catch (Exception e)
-            {
-                fileManager.WriteErrorQueueData(data, false);
                 throw e;
             }
         }

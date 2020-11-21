@@ -17,7 +17,7 @@ namespace Knero.FileQueue.Test
             QueueConfig config = new QueueConfig()
             {
                 QueueDirectory = @"d:\workspace\data\test-queue",
-                DataConverter = new ObjectSerializer(),
+                DataConverter = new ObjectConverter(),
                 QueueName = "test01"
             };
 
@@ -53,7 +53,7 @@ namespace Knero.FileQueue.Test
             QueueConfig config = new QueueConfig()
             {
                 QueueDirectory = @"d:\workspace\data\test-queue",
-                DataConverter = new Utf8Serializer(),
+                DataConverter = new Utf8Converter(),
                 QueueName = "test02"
             };
 
@@ -136,7 +136,7 @@ namespace Knero.FileQueue.Test
             QueueConfig config = new QueueConfig()
             {
                 QueueDirectory = @"d:\workspace\data\test-queue",
-                DataConverter = new Utf8Serializer(),
+                DataConverter = new Utf8Converter(),
                 QueueName = "test03",
                 MaxQueueSize = 1024 * 100
             };
@@ -217,7 +217,7 @@ namespace Knero.FileQueue.Test
             QueueConfig config = new QueueConfig()
             {
                 QueueDirectory = @"d:\workspace\data\test-queue",
-                DataConverter = new ObjectSerializer(),
+                DataConverter = new ObjectConverter(),
                 QueueName = "test04",
                 DequeueTimeoutMilliseconds = timeout
             };
@@ -239,6 +239,47 @@ namespace Knero.FileQueue.Test
                 {
                     Assert.IsFalse(e.IsBroken);
                 }
+            }
+        }
+
+        public void DequeueTimeoutExceptionBrokenTest()
+        {
+            QueueConfig config = new QueueConfig()
+            {
+                QueueDirectory = @"d:\workspace\data\test-queue",
+                DataConverter = new Utf8Converter(),
+                QueueName = "test05",
+                DequeueTimeoutMilliseconds = 5000
+            };
+
+            IFileQueue<string> fq = FileQueue<string>.Create(config);
+
+            StringBuilder data = new StringBuilder();
+            for (int j = 0; j < 1000; ++j)
+            {
+                data.Append(Guid.NewGuid().ToString());
+            }
+
+            fq.Enqueue(data.ToString());
+
+            try
+            {
+                string result = fq.Dequeue();
+            }
+            catch (DequeueTimeoutException e)
+            {
+                byte[] remain = fq.DequeueRawData();
+
+                byte[] whole = new byte[e.QueueData.Length + remain.Length];
+                using (MemoryStream wholeStream = new MemoryStream(whole))
+                {
+                    wholeStream.Write(e.QueueData, 0, e.QueueData.Length);
+                    wholeStream.Write(remain, 0, remain.Length);
+                }
+
+                string result = fq.DeserializeQueueData(whole);
+
+                Assert.AreEqual(data.ToString(), result);
             }
         }
     }

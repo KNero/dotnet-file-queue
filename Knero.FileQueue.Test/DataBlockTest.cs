@@ -33,7 +33,7 @@ namespace Knero.FileQueue.Test
                 }
             };
 
-            IDataConverter converter = new ObjectSerializer();
+            IDataConverter converter = new ObjectConverter();
 
             DataBlock dataBlock = DataBlock.CreateByUserData(converter.Serialize(t1));
             DataBlock getDataBlock = DataBlock.CreateByQueueData(dataBlock.QueueData);
@@ -52,7 +52,7 @@ namespace Knero.FileQueue.Test
         public void TestConvertString()
         {
             string data = "test_data_go";
-            IDataConverter converter = new Utf8Serializer();
+            IDataConverter converter = new Utf8Converter();
 
             DataBlock dataBlock = DataBlock.CreateByUserData(converter.Serialize(data));
             DataBlock getDatablock = DataBlock.CreateByQueueData(dataBlock.QueueData);
@@ -71,7 +71,7 @@ namespace Knero.FileQueue.Test
             }
 
             string data = dataBuilder.ToString();
-            IDataConverter converter = new Utf8Serializer();
+            IDataConverter converter = new Utf8Converter();
 
             DataBlock dataBlock = DataBlock.CreateByUserData(converter.Serialize(data));
             DataBlock getDatablock = DataBlock.CreateByQueueData(dataBlock.QueueData);

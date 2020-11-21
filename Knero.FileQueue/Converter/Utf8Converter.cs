@@ -2,7 +2,7 @@
 
 namespace Knero.FileQueue.Converter
 {
-    public class Utf8Serializer : IDataConverter
+    public class Utf8Converter : IDataConverter
     {
         public object Deserialize(byte[] data)
         {
