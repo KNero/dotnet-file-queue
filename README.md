@@ -38,7 +38,7 @@ QueueConfig config = new QueueConfig()
 ```c#
 IFileQueue<string> fq = FileQueue<string>.Create(config);
 fq.Enqueue(data);
-object data = fq.Dequeue();
+string data = fq.Dequeue();
 ```
 
 ## DataConverter
@@ -55,6 +55,7 @@ namespace Knero.FileQueue.Converter
 }
 ```
 **Serialize**: Enqueue 를 호출하면 데이터를 파일로 쓰기 전에 실행되며 object 를 byte[] 로 변환해 준다.
+
 **Deserialize**: Dequeue 를 호출하면 파일의 데이터를 읽어서 byte[] 를 object 로 변환해 준다.
 
 ### 기본적으로 제공되는 Converter
@@ -71,7 +72,7 @@ Dequeue 를 호출 후 config 의 DequeueTimeoutMilliseconds가 설정되어 있
 `QueueData` 를 통해서 현재 읽어진 데이터를 가져올 수 있다.
 
 ### DequeueTimeoutException 대처하기
-만약 Enqueue 가 없어서 발생했다면 재시도하면 됨으로 간단하지만 일부만 읽었을 경우에는 아래와 같이 대처하는 것이 좋다.
+만약 Enqueue 가 없어서 발생했다면 재시도하면 됨으로 간단하지만 일부만 읽었을 경우에는 아래를 참고하여 개발하면 된다.
 ```c#
 try
 {
