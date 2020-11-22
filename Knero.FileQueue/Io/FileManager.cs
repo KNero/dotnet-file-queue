@@ -6,7 +6,7 @@ namespace Knero.FileQueue.Io
 {
     internal class FileManager : IDisposable
     {
-        private readonly static byte[] FILE_END_STAMP = Encoding.ASCII.GetBytes("file-end-stamp");
+        private readonly static byte[] FILE_END_STAMP = Encoding.ASCII.GetBytes("_file_end_stamp_");
 
         private readonly long maxFileSize;
 
@@ -60,17 +60,23 @@ namespace Knero.FileQueue.Io
             byte[] buf = new byte[readSize];
             int readCount = readStream.Read(buf, 0, readSize);
 
-            if (readCount == FILE_END_STAMP.Length && Util.CompareBytes(buf, 0, FILE_END_STAMP))
+            if (readCount < readSize)
             {
-                MoveNextQueueFile(true);
-                return ReadQueueData(readSize);
-            }
-            else
-            {
-                lock (metaHolder)
+                if (readCount == FILE_END_STAMP.Length && Util.CompareBytes(buf, 0, FILE_END_STAMP))
                 {
-                    metaHolder.MoveReadOffset(readStream.Position);
+                    MoveNextQueueFile(true);
+                    return ReadQueueData(readSize);
                 }
+                else
+                {
+                    readStream.Seek(-readCount, SeekOrigin.Current);
+                    return null;
+                }
+            }
+
+            lock (metaHolder)
+            {
+                metaHolder.MoveReadOffset(readStream.Position);
             }
 
             byte[] result = new byte[readCount];

@@ -1,19 +1,8 @@
 ﻿using System;
 using System.IO;
-using System.Text;
 
 namespace Knero.FileQueue
 {
-    /// <summary>
-    /// This contains queue data and user data.
-    /// Create queue data by user data or user data by queue data.
-    /// 
-    /// structure : [header part][data part][data part][data part][data part]...[footer part]
-    /// 
-    /// header part: header + data length(1byte) + data
-    /// data part: data length(1byte) + data
-    /// footer part: data length(1byte) + data checksum(1) + footer
-    /// </summary>
     public class DataBlock
     {
         private readonly static byte DATA = (byte)'D';

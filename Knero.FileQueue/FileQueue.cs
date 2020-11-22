@@ -87,7 +87,7 @@ namespace Knero.FileQueue
                         }
 
                         byte[] buf = fileManager.ReadQueueData(DataBlock.BlockPartSize);
-                        if (buf != null && buf.Length > 0)
+                        if (buf != null)
                         {
                             bufStream.Write(buf, 0, buf.Length);
 
