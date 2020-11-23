@@ -101,7 +101,7 @@ namespace Knero.FileQueue.Test
                                     }
                                     else
                                     {
-                                        Interlocked.Decrement(ref failCount);
+                                        Interlocked.Increment(ref failCount);
                                     }
                                 }
 
@@ -184,7 +184,7 @@ namespace Knero.FileQueue.Test
                                 }
                                 else
                                 {
-                                    Interlocked.Decrement(ref failCount);
+                                    Interlocked.Increment(ref failCount);
                                 }
                             }
 
@@ -242,13 +242,38 @@ namespace Knero.FileQueue.Test
             }
         }
 
-        public void DequeueTimeoutExceptionBrokenTest()
+        [TestMethod]
+        public void RawDataTest()
         {
             QueueConfig config = new QueueConfig()
             {
                 QueueDirectory = @"d:\workspace\data\test-queue",
                 DataConverter = new Utf8Converter(),
                 QueueName = "test05",
+                DequeueTimeoutMilliseconds = 5000
+            };
+            IFileQueue<string> fq = FileQueue<string>.Create(config);
+
+            StringBuilder data = new StringBuilder();
+            for (int j = 0; j < 20; ++j)
+            {
+                data.Append(Guid.NewGuid().ToString());
+            }
+
+            fq.Enqueue(data.ToString());
+            byte[] raw = fq.DequeueRawData();
+            string result = fq.DeserializeQueueData(raw);
+
+            Assert.AreEqual(data.ToString(), result);
+        }
+
+        public void DequeueTimeoutExceptionBrokenTest()
+        {
+            QueueConfig config = new QueueConfig()
+            {
+                QueueDirectory = @"d:\workspace\data\test-queue",
+                DataConverter = new Utf8Converter(),
+                QueueName = "test06",
                 DequeueTimeoutMilliseconds = 5000
             };
 
@@ -265,6 +290,7 @@ namespace Knero.FileQueue.Test
             try
             {
                 string result = fq.Dequeue();
+                Assert.Fail();
             }
             catch (DequeueTimeoutException e)
             {

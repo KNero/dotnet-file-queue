@@ -16,8 +16,9 @@ namespace Knero.FileQueue.Io
 
         private FileStream readStream;
         private FileStream writeStream;
+        private readonly int readSize;
 
-        internal FileManager(string queueParentDirectory, string queueName, long maxFileSize)
+        internal FileManager(string queueParentDirectory, string queueName, long maxFileSize, int readSize)
         {
             DirectoryInfo parentDirectory = new DirectoryInfo(queueParentDirectory);
             if (!parentDirectory.Exists)
@@ -26,6 +27,7 @@ namespace Knero.FileQueue.Io
             }
 
             this.maxFileSize = maxFileSize;
+            this.readSize = readSize;
             string queueDirectoryName = Path.Combine(parentDirectory.FullName, queueName);
             string errorDirectoryName = Path.Combine(queueDirectoryName, "error");
             
@@ -50,7 +52,7 @@ namespace Knero.FileQueue.Io
 
         private string GetFileFullName(long fileNameIndex) => Path.Combine(queueDirectory.FullName, fileNameIndex.ToString("D20") + ".queue");
 
-        internal byte[] ReadQueueData(int readSize)
+        internal byte[] ReadQueueData()
         {
             if (metaHolder.ReadFileNameIndex == metaHolder.WriteFileNameIndex && readStream.Length - metaHolder.ReadOffset < readSize)
             {
@@ -65,7 +67,7 @@ namespace Knero.FileQueue.Io
                 if (readCount == FILE_END_STAMP.Length && Util.CompareBytes(buf, 0, FILE_END_STAMP))
                 {
                     MoveNextQueueFile(true);
-                    return ReadQueueData(readSize);
+                    return ReadQueueData();
                 }
                 else
                 {

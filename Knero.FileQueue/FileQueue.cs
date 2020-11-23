@@ -20,7 +20,7 @@ namespace Knero.FileQueue
         private FileQueue(QueueConfig config)
         {
             dataConverter = config.DataConverter;
-            fileManager = new FileManager(config.QueueDirectory, config.QueueName, config.MaxQueueSize);
+            fileManager = new FileManager(config.QueueDirectory, config.QueueName, config.MaxQueueSize, DataBlock.BlockPartSize);
 
             isUseTimeout = config.DequeueTimeoutMilliseconds > 0;
             if (isUseTimeout)
@@ -72,31 +72,30 @@ namespace Knero.FileQueue
         public byte[] DequeueRawData()
         {
             bool isFindFooter = false;
+            DateTime start = DateTime.Now;
 
-            lock (dequeueLock)
+            using (MemoryStream bufStream = new MemoryStream())
             {
-                DateTime start = DateTime.Now;
-
-                using (MemoryStream bufStream = new MemoryStream())
+                lock (dequeueLock)
                 {
                     while (!isFindFooter)
                     {
-                        if (isUseTimeout && DateTime.Now - start > dequeueTimeout)
-                        {
-                            throw new DequeueTimeoutException(bufStream.ToArray());
-                        }
-
-                        byte[] buf = fileManager.ReadQueueData(DataBlock.BlockPartSize);
+                        byte[] buf = fileManager.ReadQueueData();
                         if (buf != null)
                         {
                             bufStream.Write(buf, 0, buf.Length);
 
                             isFindFooter = DataBlock.IsFooterBlockPart(buf);
                         }
-                    }
 
-                    return bufStream.ToArray();
+                        if (isUseTimeout && DateTime.Now - start > dequeueTimeout)
+                        {
+                            throw new DequeueTimeoutException(bufStream.ToArray());
+                        }
+                    }
                 }
+
+                return bufStream.ToArray();
             }
         }
 
