@@ -42,7 +42,6 @@ string data = fq.Dequeue();
 ```
 
 ## DataConverter
-`IDataConverter`를 구현하여 config 로 전달하면 된다.
 ```c#
 namespace Knero.FileQueue.Converter
 {
@@ -58,6 +57,7 @@ namespace Knero.FileQueue.Converter
 
 **Deserialize**: Dequeue 를 호출하면 파일의 데이터를 읽어서 byte[] 를 object 로 변환해 준다.
 
+기본적으로 제공되는 Converter 는 아래와 같이 있으며 다른 형태(json과 같은)의 변환이 필요할 경우 `IDataConverter`를 구현하여 config 로 전달하면 된다.
 ### 기본적으로 제공되는 Converter
 - ObjectConverter: BinaryFormatter 를 사용하여 변환을 수행한다.
 - Utf8Converter: string 을 Encoding.UTF8 를 사용하여 변환을 수행한다.
