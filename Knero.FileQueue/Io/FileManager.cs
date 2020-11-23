@@ -18,7 +18,12 @@ namespace Knero.FileQueue.Io
         private FileStream writeStream;
         private readonly int readSize;
 
-        internal FileManager(string queueParentDirectory, string queueName, long maxFileSize, int readSize)
+        private readonly bool isUseReadBuffer;
+        private readonly byte[] readBuffer;
+        private int readBufferReadOffset;
+        private int readBufferWriteOffset;
+
+        internal FileManager(string queueParentDirectory, string queueName, long maxFileSize, int readSize, int readBufferSize)
         {
             DirectoryInfo parentDirectory = new DirectoryInfo(queueParentDirectory);
             if (!parentDirectory.Exists)
@@ -28,6 +33,15 @@ namespace Knero.FileQueue.Io
 
             this.maxFileSize = maxFileSize;
             this.readSize = readSize;
+
+            isUseReadBuffer = readBufferSize > 0;
+            if (isUseReadBuffer)
+            {
+                readBuffer = new byte[readBufferSize];
+                readBufferReadOffset = 0;
+                readBufferWriteOffset = 0;
+            }
+
             string queueDirectoryName = Path.Combine(parentDirectory.FullName, queueName);
             string errorDirectoryName = Path.Combine(queueDirectoryName, "error");
             
@@ -54,6 +68,11 @@ namespace Knero.FileQueue.Io
 
         internal byte[] ReadQueueData()
         {
+            if (isUseReadBuffer)
+            {
+                return ReadQueueDataByBuffer();
+            }
+
             if (metaHolder.ReadFileNameIndex == metaHolder.WriteFileNameIndex && readStream.Length - metaHolder.ReadOffset < readSize)
             {
                 return null;
@@ -85,6 +104,58 @@ namespace Knero.FileQueue.Io
             Buffer.BlockCopy(buf, 0, result, 0, readCount);
 
             return result;
+        }
+
+        private byte[] ReadQueueDataByBuffer()
+        {
+            if (readBufferReadOffset == readBuffer.Length)
+            {
+                readBufferReadOffset = 0;
+
+                if (readBufferWriteOffset == readBuffer.Length)
+                {
+                    readBufferWriteOffset = 0;
+                }
+            }
+
+            
+            if (readBufferReadOffset + readSize <= readBufferWriteOffset)
+            {
+                byte[] temp = new byte[readSize];
+                Buffer.BlockCopy(readBuffer, readBufferReadOffset, temp, 0, readSize);
+                readBufferReadOffset += readSize;
+
+                lock (metaHolder)
+                {
+                    metaHolder.MoveReadOffset(metaHolder.ReadOffset + readSize);
+                }
+
+                return temp;
+            }
+            else if (readBufferReadOffset + FILE_END_STAMP.Length == readBufferWriteOffset && Util.CompareBytes(readBuffer, readBufferReadOffset, FILE_END_STAMP))
+            {
+                readBufferReadOffset = 0;
+                readBufferWriteOffset = 0;
+                MoveNextQueueFile(true);
+                return ReadQueueDataByBuffer();
+            }
+            else if (readBufferWriteOffset < readBuffer.Length)
+            {
+                byte[] buf = new byte[readBuffer.Length - readBufferWriteOffset];
+                int readCount = readStream.Read(buf, 0, buf.Length);
+                if (readCount > 0)
+                {
+                    Buffer.BlockCopy(buf, 0, readBuffer, readBufferWriteOffset, readCount);
+                    readBufferWriteOffset += readCount;
+                    return ReadQueueDataByBuffer();
+                }
+                else
+                {
+                    return null;
+                }
+            }
+
+            return null;
         }
 
         internal void WriteQueueData(byte[] data)

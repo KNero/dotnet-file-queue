@@ -9,5 +9,6 @@ namespace Knero.FileQueue
         public IDataConverter DataConverter { get; set; }
         public long MaxQueueSize { get; set; } = 3221225472;
         public int DequeueTimeoutMilliseconds { get; set; } = -1;
+        public int ReadBufferSize { get; set; } = -1;
     }
 }

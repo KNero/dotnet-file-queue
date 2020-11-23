@@ -20,7 +20,7 @@ namespace Knero.FileQueue
         private FileQueue(QueueConfig config)
         {
             dataConverter = config.DataConverter;
-            fileManager = new FileManager(config.QueueDirectory, config.QueueName, config.MaxQueueSize, DataBlock.BlockPartSize);
+            fileManager = new FileManager(config.QueueDirectory, config.QueueName, config.MaxQueueSize, DataBlock.BlockPartSize, config.ReadBufferSize);
 
             isUseTimeout = config.DequeueTimeoutMilliseconds > 0;
             if (isUseTimeout)

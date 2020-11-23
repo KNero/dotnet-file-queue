@@ -54,7 +54,8 @@ namespace Knero.FileQueue.Test
             {
                 QueueDirectory = @"d:\workspace\data\test-queue",
                 DataConverter = new Utf8Converter(),
-                QueueName = "test02"
+                QueueName = "test02",
+                ReadBufferSize = 1024 * 1024
             };
 
             IFileQueue<string> fq = FileQueue<string>.Create(config);
@@ -137,15 +138,16 @@ namespace Knero.FileQueue.Test
             {
                 QueueDirectory = @"d:\workspace\data\test-queue",
                 DataConverter = new Utf8Converter(),
+                MaxQueueSize = 1024 * 500,
                 QueueName = "test03",
-                MaxQueueSize = 1024 * 100
+                ReadBufferSize = 1024 * 1024 * 3
             };
 
             IFileQueue<string> fq = FileQueue<string>.Create(config);
             HashSet<string> writeData = new HashSet<string>();
             int successCount = 0;
             int failCount = 0;
-            int dataCount = 2000;
+            int dataCount = 20000;
             
             Thread t1 = new Thread(() =>
             {
